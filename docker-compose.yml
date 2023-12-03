@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "4566:4566" # LocalStack's default edge port
+      - "4571:4571" # Deprecated port, but can be included for backward compatibility
+    environment:
+      - SERVICES=sqs
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+    volumes:
+      # https://docs.localstack.cloud/getting-started/installation/#docker-compose
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
