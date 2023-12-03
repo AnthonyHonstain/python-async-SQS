@@ -1,37 +1,73 @@
-import boto3
+import asyncio
+
+import botocore.exceptions
+from aiobotocore.session import get_session
+import sys
+
+QUEUE_NAME = 'my-queue2'
 
 
-def consume_sqs_messages(sqs_queue_url):
-    # Create SQS client
-    sqs = boto3.client(
-        'sqs',
-        endpoint_url='http://localhost:4566',
-        region_name='us-east-1',
-        aws_access_key_id='test',
-        aws_secret_access_key='test'
-    )
+async def consume_message(consumer_name: int):
+    async with get_session().create_client(
+            'sqs',
+            region_name='us-east-1',
+            endpoint_url='http://localhost:4566',
+            aws_access_key_id='test',
+            aws_secret_access_key='test'
+    ) as client:
+        try:
+            response = await client.get_queue_url(QueueName=QUEUE_NAME)
+        except botocore.exceptions.ClientError as err:
+            if err.response['Error']['Code'] == 'AWS.SimpleQueueService.NonExistentQueue':
+                print(f"Queue {QUEUE_NAME} does not exist")
+                sys.exit(1)
+            else:
+                raise
 
-    # Receive messages from SQS queue
-    response = sqs.receive_message(
-        QueueUrl=sqs_queue_url,
-        MaxNumberOfMessages=10,  # Adjust as needed
-        WaitTimeSeconds=10,  # Adjust as needed
-    )
+        queue_url = response['QueueUrl']
 
-    # Process messages
-    if 'Messages' in response:
-        for message in response['Messages']:
-            print(f"Received message: {message['Body']}")
-            # Delete received message from queue
-            sqs.delete_message(
-                QueueUrl=sqs_queue_url,
-                ReceiptHandle=message['ReceiptHandle']
-            )
-    else:
-        print("No messages to process.")
+        while True:
+            print(f'Pulling messages off the queue - {consumer_name}')
+            try:
+                response = await client.receive_message(
+                    QueueUrl=queue_url,
+                    MaxNumberOfMessages=1,
+                    WaitTimeSeconds=2,
+                )
+
+                if 'Messages' in response:
+                    for msg in response['Messages']:
+                        id = msg['Body'].split()[-1]
+
+                        print(f'{id} Started')
+                        await asyncio.sleep(5)
+                        print(f'{id} Complete')
+
+                        # Need to remove msg from queue or else it'll reappear, you could see this by
+                        # checking ApproximateNumberOfMessages and ApproximateNumberOfMessagesNotVisible
+                        # in the queue.
+                        await client.delete_message(
+                            QueueUrl=queue_url,
+                            ReceiptHandle=msg['ReceiptHandle'],
+                        )
+                else:
+                    print('No messages in queue')
+            except asyncio.CancelledError:
+                print('Cancel Error')
+                break
+            # except KeyboardInterrupt:
+            #     break
+
+        print('Finished')
 
 
-# Example usage
+async def main():
+    consumers = [consume_message(consumer_name) for consumer_name in range(1)]
+    await asyncio.gather(*consumers)
+
+
 if __name__ == "__main__":
-    queue_url = "/000000000000/my-queue2"
-    consume_sqs_messages(queue_url)
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Script interrupted by user")
