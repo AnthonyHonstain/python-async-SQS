@@ -4,6 +4,8 @@ import botocore.exceptions
 from aiobotocore.session import get_session
 import sys
 
+from sqs_consumer_project.async_worker import do_work
+
 QUEUE_NAME = 'my-queue2'
 
 
@@ -37,11 +39,12 @@ async def consume_message(consumer_name: int):
 
                 if 'Messages' in response:
                     for msg in response['Messages']:
-                        id = msg['Body'].split()[-1]
+                        worker_id = msg['Body'].split()[-1]
 
-                        print(f'{id} Started')
-                        await asyncio.sleep(5)
-                        print(f'{id} Complete')
+                        await do_work(worker_id)
+                        # print(f'{id} Started')
+                        # await asyncio.sleep(5)
+                        # print(f'{id} Complete')
 
                         # Need to remove msg from queue or else it'll reappear, you could see this by
                         # checking ApproximateNumberOfMessages and ApproximateNumberOfMessagesNotVisible
