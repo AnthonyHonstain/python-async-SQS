@@ -24,4 +24,23 @@ aws --endpoint-url=http://localhost:4566 sqs send-message --queue-url http://loc
 
 # Get queue attributes
 aws --endpoint-url=http://localhost:4566 sqs get-queue-attributes --queue-url http://localhost:4566/000000000000/my-queue2 --attribute-names All
+
+# Purge Queue
+aws --endpoint-url=http://localhost:4566 sqs purge-queue --queue-url http://localhost:4566/000000000000/test-my-queue2
+```
+
+# Guide if you wanted to use Mamba
+
+```
+mamba create -n python-async -c conda-forge  python=3.12
+
+mamba activate python-async
+
+pip install poetry
+
+poetry env info         
+
+poetry install
+
+poetry config --list
 ```

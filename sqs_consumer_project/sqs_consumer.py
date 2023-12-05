@@ -6,10 +6,8 @@ import sys
 
 from sqs_consumer_project.async_worker import do_work
 
-QUEUE_NAME = 'my-queue2'
 
-
-async def consume_message(consumer_name: int):
+async def consume_message(queue_name: str, consumer_name: int, shutdown_signal: asyncio.Event):
     async with get_session().create_client(
             'sqs',
             region_name='us-east-1',
@@ -18,17 +16,17 @@ async def consume_message(consumer_name: int):
             aws_secret_access_key='test'
     ) as client:
         try:
-            response = await client.get_queue_url(QueueName=QUEUE_NAME)
+            response = await client.get_queue_url(QueueName=queue_name)
         except botocore.exceptions.ClientError as err:
             if err.response['Error']['Code'] == 'AWS.SimpleQueueService.NonExistentQueue':
-                print(f"Queue {QUEUE_NAME} does not exist")
+                print(f"Queue {queue_name} does not exist")
                 sys.exit(1)
             else:
                 raise
 
         queue_url = response['QueueUrl']
 
-        while True:
+        while not shutdown_signal.is_set():
             print(f'Pulling messages off the queue - {consumer_name}')
             try:
                 response = await client.receive_message(
@@ -39,9 +37,9 @@ async def consume_message(consumer_name: int):
 
                 if 'Messages' in response:
                     for msg in response['Messages']:
-                        worker_id = msg['Body'].split()[-1]
+                        message_body = msg['Body']
 
-                        await do_work(worker_id)
+                        await do_work(consumer_name)
                         # print(f'{id} Started')
                         # await asyncio.sleep(5)
                         # print(f'{id} Complete')
@@ -65,7 +63,10 @@ async def consume_message(consumer_name: int):
 
 
 async def main():
-    consumers = [consume_message(consumer_name) for consumer_name in range(1)]
+    queue_name = 'my-queue2'
+    consumer_count = 1
+    shutdown_signal = asyncio.Event()
+    consumers = [consume_message(queue_name, consumer_name, shutdown_signal) for consumer_name in range(consumer_count)]
     await asyncio.gather(*consumers)
 
 
