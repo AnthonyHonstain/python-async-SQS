@@ -33,22 +33,11 @@ async def test_sqs_consumer():
         aws_secret_access_key="test",
     ) as sqs_client:
         # Create the queue
-        response = await sqs_client.create_queue(QueueName=QUEUE_NAME)
-
-        queue_url = response["QueueUrl"]
-
-        response = await sqs_client.list_queues()
-
-        print("Queue URLs:")
-        for queue_name in response.get("QueueUrls", []):
-            print(f" {queue_name}")
+        await sqs_client.create_queue(QueueName=QUEUE_NAME)
 
         # Send a message
         test_message = '{"name": "Anthony", "age":2, "unknown":"unknown-fields"}'
         await sqs_client.send_message(QueueUrl=QUEUE_NAME, MessageBody=test_message)
-
-        # Wait a bit to ensure the message is processed
-        await asyncio.sleep(0.25)  # Adjust the sleep time as needed
 
         # Start the consumer in a background task
         consumer_task = asyncio.create_task(consume_message(QUEUE_NAME, 666, shutdown_signal))
