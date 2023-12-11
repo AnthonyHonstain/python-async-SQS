@@ -45,12 +45,12 @@ async def consume_message(queue_name: str, consumer_name: int, shutdown_signal: 
                         print(f"consumer_name:{consumer_name} Starting MessageId:{message_id}")
                         try:
                             message_dict = json.loads(message_body)
-                            message_data = MessageModel.model_validate(message_dict)
-                            print(message_data)
+                            message = MessageModel.model_validate(message_dict)
+                            print(message)
                         except pydantic.ValidationError as e:
                             print(f"Invalid message format: {e}")
 
-                        await do_work(consumer_name)
+                        await do_work(consumer_name, message)
 
                         # Need to remove msg from queue or else it'll reappear, you could see this by
                         # checking ApproximateNumberOfMessages and ApproximateNumberOfMessagesNotVisible
