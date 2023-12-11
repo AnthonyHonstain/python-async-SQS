@@ -44,11 +44,11 @@ async def test_sqs_consumer():
             print(f' {queue_name}')
 
         # Send a message
-        test_message = "1 Test message"
+        test_message = '{"name": "Anthony", "age":2, "unknown":"unknown-fields"}'
         await sqs_client.send_message(QueueUrl=QUEUE_NAME, MessageBody=test_message)
 
         # Wait a bit to ensure the message is processed
-        await asyncio.sleep(1)  # Adjust the sleep time as needed
+        await asyncio.sleep(.25)  # Adjust the sleep time as needed
 
         # Start the consumer in a background task
         consumer_task = asyncio.create_task(
@@ -56,7 +56,7 @@ async def test_sqs_consumer():
         )
 
         # Wait a bit to ensure the message is processed
-        await asyncio.sleep(1)  # Adjust the sleep time as needed
+        await asyncio.sleep(.25)  # Adjust the sleep time as needed
 
         # TODO - the system doesn't do anything and hence we don't have anything
         #  to test here, but this is where we would verify the consumer did something
@@ -66,5 +66,3 @@ async def test_sqs_consumer():
 
         # Wait for the consumer to finish
         await consumer_task
-
-

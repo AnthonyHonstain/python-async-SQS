@@ -1,10 +1,13 @@
 import asyncio
+import json
 
 import botocore.exceptions
+import pydantic
 from aiobotocore.session import get_session
 import sys
 
 from sqs_consumer_project.async_worker import do_work
+from sqs_consumer_project.models.Message import MessageModel
 
 
 async def consume_message(queue_name: str, consumer_name: int, shutdown_signal: asyncio.Event):
@@ -27,7 +30,7 @@ async def consume_message(queue_name: str, consumer_name: int, shutdown_signal: 
         queue_url = response['QueueUrl']
 
         while not shutdown_signal.is_set():
-            print(f'Pulling messages off the queue - {consumer_name}')
+            print(f'consumer_name:{consumer_name} Pulling messages off the queue')
             try:
                 response = await client.receive_message(
                     QueueUrl=queue_url,
@@ -37,12 +40,17 @@ async def consume_message(queue_name: str, consumer_name: int, shutdown_signal: 
 
                 if 'Messages' in response:
                     for msg in response['Messages']:
+                        message_id = msg['MessageId']
                         message_body = msg['Body']
+                        print(f'consumer_name:{consumer_name} Starting MessageId:{message_id}')
+                        try:
+                            message_dict = json.loads(message_body)
+                            message_data = MessageModel.model_validate(message_dict)
+                            print(message_data)
+                        except pydantic.ValidationError as e:
+                            print(f'Invalid message format: {e}')
 
                         await do_work(consumer_name)
-                        # print(f'{id} Started')
-                        # await asyncio.sleep(5)
-                        # print(f'{id} Complete')
 
                         # Need to remove msg from queue or else it'll reappear, you could see this by
                         # checking ApproximateNumberOfMessages and ApproximateNumberOfMessagesNotVisible
