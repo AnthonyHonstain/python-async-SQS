@@ -20,7 +20,7 @@ aws --endpoint-url=http://localhost:4566 sqs list-queues
 poetry run python sqs_consumer_project/sqs_consumer.py
 
 # Send a message
-aws --endpoint-url=http://localhost:4566 sqs send-message --queue-url http://localhost:4566/000000000000/my-queue2 --message-body "Hello, World"
+aws --endpoint-url=http://localhost:4566 sqs send-message --queue-url http://localhost:4566/000000000000/my-queue2 --message-body '{"name": "Anthony", "age":2, "ignored":"new-fields"}'
 
 # Get queue attributes
 aws --endpoint-url=http://localhost:4566 sqs get-queue-attributes --queue-url http://localhost:4566/000000000000/my-queue2 --attribute-names All
