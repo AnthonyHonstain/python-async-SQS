@@ -46,9 +46,9 @@ async def consume_message(queue_name: str, consumer_name: int, shutdown_signal: 
                         try:
                             message_dict = json.loads(message_body)
                             message = MessageModel.model_validate(message_dict)
-                            print(message)
+                            print(f"consumer_name:{consumer_name} pydantic model: {message}")
                         except pydantic.ValidationError as e:
-                            print(f"Invalid message format: {e}")
+                            print(f"consumer_name:{consumer_name} Invalid message format: {e}")
 
                         await do_work(consumer_name, message)
 
@@ -60,9 +60,9 @@ async def consume_message(queue_name: str, consumer_name: int, shutdown_signal: 
                             ReceiptHandle=msg["ReceiptHandle"],
                         )
                 else:
-                    print("No messages in queue")
+                    print(f"consumer_name:{consumer_name} No messages in queue")
             except asyncio.CancelledError:
-                print("Cancel Error")
+                print(f"consumer_name:{consumer_name} Cancel Error")
                 break
             # except KeyboardInterrupt:
             #     break
@@ -72,7 +72,7 @@ async def consume_message(queue_name: str, consumer_name: int, shutdown_signal: 
 
 async def main():
     queue_name = "my-queue2"
-    consumer_count = 1
+    consumer_count = 2
     shutdown_signal = asyncio.Event()
     consumers = [consume_message(queue_name, consumer_name, shutdown_signal) for consumer_name in range(consumer_count)]
     await asyncio.gather(*consumers)

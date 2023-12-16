@@ -13,3 +13,24 @@ services:
     volumes:
       # https://docs.localstack.cloud/getting-started/installation/#docker-compose
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+
+  wiremock:
+    image: rodolpheche/wiremock
+    ports:
+      - "8080:8080" # Default Wiremock port
+    volumes:
+      - ./wiremock:/home/wiremock
+    command: --verbose
+
+  localstack-init:
+    image: amazon/aws-cli
+    depends_on:
+      - localstack
+    environment:
+      AWS_ACCESS_KEY_ID: 'test'
+      AWS_SECRET_ACCESS_KEY: 'test'
+      AWS_DEFAULT_REGION: 'us-east-1'
+    volumes:
+      - ./init-localstack.sh:/init-localstack.sh  # Corrected volume mount
+    entrypoint: /bin/sh
+    command: -c "/init-localstack.sh"

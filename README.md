@@ -4,11 +4,17 @@ concurrency scenarios (messages with fast vs slow processing times).
 
 Started with a non-async consumer and then grew it into an async example.
 
-Using localstack SQS for the queue.
+Using localstack SQS for the queue and wiremock for the consumer to execute an HTTP call against.
 
-There are no tests yet.
+The tests are very basic.
 
 # Important Commands
+
+Docker compose should be able to standup wiremock and localstack with the initial required configuration.
+* Wiremock - with a basic (and delayed) response
+* localstack - with the queue setup you need for testing (which is done via the `init-localstack.sh` script that runs as part of docker compose).
+
+## Manual commands
 ```
 # Create a queue
 aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name my-queue2 --region us-east-1
@@ -30,6 +36,7 @@ aws --endpoint-url=http://localhost:4566 sqs purge-queue --queue-url http://loca
 ```
 
 # Guide if you wanted to use Mamba
+These are the exact steps I used on a Ubuntu 23.10 install.
 
 ```
 mamba create -n python-async -c conda-forge  python=3.12
