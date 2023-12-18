@@ -14,10 +14,13 @@ async def do_work(worker_id: int, message: MessageModel) -> MessageModel:
     message.age += 1
     async with httpx.AsyncClient() as client:
         response = await client.post("http://localhost:8080/record_user", json=message.model_dump_json())
+        response.raise_for_status()
+
         try:
             record_user_response = RecordUserResponse(**response.json())
         except ValidationError as e:
-            print(e.errors())
+            print(f"worker_id:{worker_id} {e.errors()}")
+            raise e
 
         print(f"worker_id:{worker_id} response user_id:{record_user_response.user_id}")
 
