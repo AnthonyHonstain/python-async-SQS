@@ -1,11 +1,11 @@
 import httpx
 from pydantic import ValidationError
 
-from sqs_consumer_project.models.Message import MessageModel
+from sqs_consumer_project.models.example_sqs_message import ExampleSQSMessageModel
 from sqs_consumer_project.models.record_user_response import RecordUserResponse
 
 
-async def do_work(worker_id: int, message: MessageModel) -> MessageModel:
+async def do_work(worker_id: int, message: ExampleSQSMessageModel) -> ExampleSQSMessageModel:
     print(f"worker_id:{worker_id} Started on name:{message.name} age:{message.age}")
 
     # This is used for testing this worker under unusual delays.
@@ -13,7 +13,8 @@ async def do_work(worker_id: int, message: MessageModel) -> MessageModel:
 
     message.age += 1
     async with httpx.AsyncClient() as client:
-        response = await client.post("http://localhost:8080/record_user", json=message.model_dump_json())
+        json_body = message.model_dump_json()
+        response = await client.post("http://localhost:8080/record_user", json=json_body)
         response.raise_for_status()
 
         try:

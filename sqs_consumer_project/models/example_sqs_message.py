@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class MessageModel(BaseModel):
+class ExampleSQSMessageModel(BaseModel):
     name: str
     age: int

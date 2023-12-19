@@ -11,11 +11,12 @@ aiobotocore = "^2.8.0"
 pydantic = "^2.5.2"
 black = "^23.11.0"
 httpx = "^0.25.2"
-
+mypy = "^1.7.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
 pytest-asyncio = "^0.23.2"
+respx = "^0.20.2"
 
 [build-system]
 requires = ["poetry-core"]
