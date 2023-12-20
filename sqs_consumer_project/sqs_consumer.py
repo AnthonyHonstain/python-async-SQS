@@ -75,8 +75,7 @@ async def message_processor(consumer_name: int, message_id: str, message_body: s
         print(f"consumer_name:{consumer_name} Invalid message format: {e}")
         return False
 
-    await do_work(consumer_name, message)
-    return True
+    return await do_work(consumer_name, message)
 
 
 async def main():

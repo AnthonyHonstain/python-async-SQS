@@ -1,7 +1,6 @@
 import pytest
 import respx
-from httpx import Response, HTTPStatusError
-from pydantic import ValidationError
+from httpx import Response
 
 from sqs_consumer_project.async_worker import do_work
 from sqs_consumer_project.models.example_sqs_message import ExampleSQSMessageModel
@@ -19,9 +18,7 @@ async def test_do_work__successful_post():
     test_message = ExampleSQSMessageModel(name="Test Name", age=20)
 
     result = await do_work(worker_id, test_message)
-
-    assert result.age == 21
-    assert result.name == "Test Name"
+    assert result is True
 
     assert post_route.called
     assert post_route.call_count == 1
@@ -37,18 +34,18 @@ async def test_do_work__failed_post():
     worker_id = 1
     test_message = ExampleSQSMessageModel(name="Test Name", age=20)
 
-    with pytest.raises(HTTPStatusError):
-        await do_work(worker_id, test_message)
+    result = await do_work(worker_id, test_message)
+    assert result is False
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_do_work__expected_post_result():
     url = "http://localhost:8080/record_user"  # Adjust this to the actual URL
-    respx.post(url).mock(return_value=Response(200, json={"UNKNOWN": "123"}))
+    respx.post(url).mock(return_value=Response(200, json={"UNKNOWN": "UNEXPECTED_RESPONSE"}))
 
     worker_id = 1
     test_message = ExampleSQSMessageModel(name="Test Name", age=20)
 
-    with pytest.raises(ValidationError):
-        await do_work(worker_id, test_message)
+    result = await do_work(worker_id, test_message)
+    assert result is False
